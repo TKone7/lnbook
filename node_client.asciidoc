@@ -1,14 +1,203 @@
 [[set_up_a_lightning_node]]
-== Set up your Lightning Network Node
-The Lightning Network is specified in the lightning-rfc by the open source community.
-The lightning-rfc is also called Basics of Lightning Technology (BOLT) which is a collection of documents (BOLTs) that specify the components needed for the protocol.
-There are several teams who implement the BOLTs as software which you can run on your computer or a server.
-All those teams also contribute to the BOLTs.
-In this chapter you will learn how to set up each of the software packages for each of the Lightning Network implementations.
-We presented them in alphabetical order to emphasize that we generally do not prefer or recommend one over the other.
-It will depend on your preferences which of the software packages you might want to work with.
+== Lightning Node Software
+
+As we've seen in previous chapters, a Lightning node is a computer system that participates in the Lightning Network. The Lightning Network is not a product or company - it is a set of open standards that define a baseline for interoperability. As such, Lightning node software has been built by a variety of companies and community groups. The vast majority of Lightning software is _open source_, meaning that the source code is open and licensed in such as way as to enable collaboration, sharing and community participation in the development process. Similarly, the Lightning node implementations we will show in this chapter are all open source and collaborative developed.
+
+Unlike Bitcoin, where the standard is defined by a _reference implementation_ in software (Bitcoin Core), in Lightning the standard is defined by a series of standards documents called _Basis of Lightning Technology (BOLT)_, found at the lightning-rfc repository at:
+
+https://github.com/lightningnetwork/lightning-rfc
+
+There is no reference implementation of the Lightning Network, but there are several competing, BOLT-compliant and interoperable implementations developed by different teams and organizations. The teams that develop software for the Lightning Network also contribute in the development and evolution of the BOLTs.
+
+Another major difference between Lightning node software and Bitcoin node software is that Lightning nodes do not need to operate in "lockstep" with consensus rules, and can have extended functionality beyond the baseline of the BOLTS. Therefore, different teams may pursue various experimental features that, if successful and broadly deployed, may become part of the BOLTs later.
+
+In this chapter you will learn how to set up each of the software packages for the most popular Lightning node implementations. We've presented them in alphabetical order to emphasize that we generally do not prefer or recommend one over the other. Each has its strengths and weaknesses and choosing one will depend on a variety of factors. Since they are developed in different programming languages (e.g. Go, C, etc.) your choice may also depend on your level of familiarity and expertise with a specific language and development toolset.
+
+=== Lightning Development Environment
+
+((("development environment", "setup")))If you're a developer, you will want to set up a development environment with all the tools, libraries, and support software for writing and running Lightning software. In this highly technical chapter, we'll walk through that process step-by-step. If the material becomes too dense (and you're not actually setting up a development environment) feel free to skip to the next chapter, which is less technical.
+
+==== Using the command-line
+
+The examples in this chapter, and more broadly in most of this book, use a command-line terminal. That means that you type commands into a terminal and receive text responses. Furthermore, the examples are demonstrated on an operating system based on the Linux kernel and GNU software system, specifically the latest long-term stable release of Ubuntu (Ubuntu 18.04 LTS). The majority of the examples can be replicated on other operating systems such as Windows or Mac OS, with small modifications to the commands. The biggest difference between operating systems is the _package manager_ which installs the various software libraries and pre-requisites. In the examples, we will use +apt+, which is the package manager for Ubuntu. In Mac OS, a common package manager used for open source development is Homebrew (command +brew+) found at https://brew.sh.
+
+Many developers also use a _container_, which is a type of virtual machine, to install a pre-configured operating system and application with all the necessary dependencies. Much of the Lightning software can also be installed using a container system such as _Docker_ (command +docker+) found at https://docker.com. Container installations are a lot easier, especially for those who are not used to a command-line environment.
+
+In most of the examples here, we will be building the software directly from the source code, which gives us the most power and control, but can be quite challenging. You may choose to use a docker container, pre-compiled package or other installation mechanism instead if you get stuck!
+
+[TIP]
+====
+((("$ symbol")))((("shell commands")))((("terminal applications")))In many of the examples in this chapter we will be using the operating system's command-line interface (also known as a "shell"), accessed via a "terminal" application. The shell will display a prompt; you type a command; and the shell responds with some text and a new prompt for your next command. The prompt may look different on your system, but in the following examples it is denoted by a +$+ symbol. In the examples, when you see text after a +$+ symbol, don't type the +$+ symbol but type the command immediately following it, then press Enter to execute the command. In the examples, the lines below each command are the operating system's responses to that command. When you see the next +$+ prefix, you'll know it's a new command and you should repeat the process.
+====
+
+==== Installing a Bitcoin node
+
+Most of the Lightning node implementations need access to a full Bitcoin node in order to work. This Bitcoin node can be installed on the same computer (will require an additional 250+ GB of disk) or run on a different computer that can authorize connections from the Lightning node over the Internet.
+
+Installing a full Bitcoin node is outside the scope of this book and is a relatively complex endeavor in itself. If you want to try it, refer to _Mastering Bitcoin_ (https://github.com/bitcoinbook/bitcoinbook), "Chapter 3: Bitcoin Core: The Reference Implementation" which discusses the installation and operation of a Bitcoin node.
+
+In the following examples we will be using a Bitcoin node that has already been installed and fully synched to the Bitcoin blockchain on another computer, and connecting to it over the Internet.
 
 === c-lightning
+
+C-lightning is a lightweight, highly customizable, and standard-compliant implementation of the Lightning Network protocol, developed by Blockstream as part of the Elements project. The project is open source and developed collaboratively on Github:
+
+https://github.com/ElementsProject/lightning
+
+==== Installing c-lightning from source code
+
+The c-lightning developers have provided detailed instructions for building c-lightning from source code. We will be following the instructions here:
+
+https://github.com/ElementsProject/lightning/blob/master/doc/INSTALL.md
+
+==== Installing prerequisite libraries and packages
+
+The first step, as is often the case, is the installation of pre-requisite libraries. We use the +apt+ package manager to install these:
+
+----
+$ sudo apt-get update
+
+Get:1 http://security.ubuntu.com/ubuntu bionic-security InRelease [88.7 kB]
+Hit:2 http://eu-north-1b.clouds.archive.ubuntu.com/ubuntu bionic InRelease
+Get:3 http://eu-north-1b.clouds.archive.ubuntu.com/ubuntu bionic-updates InRelease [88.7 kB]
+
+[...]
+
+Fetched 18.3 MB in 8s (2,180 kB/s)
+Reading package lists... Done
+
+$ sudo apt-get install -y \
+  autoconf automake build-essential git libtool libgmp-dev \
+  libsqlite3-dev python python3 python3-mako net-tools zlib1g-dev libsodium-dev \
+  gettext
+
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+The following additional packages will be installed:
+  autotools-dev binutils binutils-common binutils-x86-64-linux-gnu cpp cpp-7 dpkg-dev fakeroot g++ g++-7 gcc gcc-7 gcc-7-base libalgorithm-diff-perl
+
+ [...]
+
+Setting up libgcc-7-dev:amd64 (7.4.0-1ubuntu1~18.04.1) ...
+Setting up cpp-7 (7.4.0-1ubuntu1~18.04.1) ...
+Setting up libsodium-dev:amd64 (1.0.16-2) ...
+Setting up libstdc++-7-dev:amd64 (7.4.0-1ubuntu1~18.04.1) ...
+
+[...]
+$
+----
+
+After a few minutes and a lot of on-screen activity, you will have installed all the necessary packages and libraries. Many of these libraries are also used by other Lightning packages and for software development in general.
+
+==== Copying the c-lightning source code
+
+Next, we will copy the latest version of c-lightning from the source code repository. To do this, we will use the +git clone+ command, which clones a version-controlled copy onto your local machine, allowing you to keep it synchronized with subsequent changes without having to download the whole thing again:
+
+----
+$ git clone https://github.com/ElementsProject/lightning.git
+Cloning into 'lightning'...
+remote: Enumerating objects: 24, done.
+remote: Counting objects: 100% (24/24), done.
+remote: Compressing objects: 100% (22/22), done.
+remote: Total 53192 (delta 5), reused 5 (delta 2), pack-reused 53168
+Receiving objects: 100% (53192/53192), 29.59 MiB | 19.30 MiB/s, done.
+Resolving deltas: 100% (39834/39834), done.
+
+$ cd lightning
+
+----
+
+We now have a copy of c-lightning, cloned into the +lightning+ subfolder, and we have used the +cd+ (change directory) command to enter that subfolder.
+
+Next, we use a set of _build scripts_ that are commonly available on many open source projects. These are +configure+ and +make+, and they allow us to:
+* Select the build options and check necessary dependencies (+configure+).
+* Build and install the executables and libraries (+make+).
+
+Running the +configure+ with the +help+ option will show us all the options that we can set:
+
+----
+$ ./configure --help
+Usage: ./configure [--reconfigure] [setting=value] [options]
+
+Options include:
+  --prefix= (default /usr/local)
+    Prefix for make install
+  --enable/disable-developer (default disable)
+    Developer mode, good for testing
+  --enable/disable-experimental-features (default disable)
+    Enable experimental features
+  --enable/disable-compat (default enable)
+    Compatibility mode, good to disable to see if your software breaks
+  --enable/disable-valgrind (default (autodetect))
+    Run tests with Valgrind
+  --enable/disable-static (default disable)
+    Static link sqlite3, gmp and zlib libraries
+  --enable/disable-address-sanitizer (default disable)
+    Compile with address-sanitizer
+----
+
+We don't need to change any of the defaults for this example, so we run +configure+ again, without any options, to set the defaults:
+
+----
+$ ./configure
+
+Compiling ccan/tools/configurator/configurator...done
+checking for python3-mako... found
+Making autoconf users comfortable... yes
+checking for off_t is 32 bits... no
+checking for __alignof__ support... yes
+
+[...]
+
+Setting COMPAT... 1
+PYTEST not found
+Setting STATIC... 0
+Setting ASAN... 0
+Setting TEST_NETWORK... regtest
+$
+----
+
+Next, we use the +make+ command to build the libraries, components and executables of the c-lightning project. This part will take several minutes to complete and will use your computers CPU and disk aggressively, so expect some noise from the fans! Running make:
+
+----
+$ make
+
+cc -DBINTOPKGLIBEXECDIR="\"../libexec/c-lightning\"" -Wall -Wundef -Wmis...
+
+[...]
+
+cc   -Og  ccan-asort.o ccan-autodata.o ccan-bitmap.o ccan-bitops.o ccan-...
+
+----
+
+If all goes well, you will see no +ERROR+ message stopping the execution of the above command. The c-lightning software package has been compiled from source and we are now ready to install the executable packages:
+
+----
+$ sudo make install
+
+mkdir -p /usr/local/bin
+mkdir -p /usr/local/libexec/c-lightning
+mkdir -p /usr/local/libexec/c-lightning/plugins
+mkdir -p /usr/local/share/man/man1
+mkdir -p /usr/local/share/man/man5
+mkdir -p /usr/local/share/man/man7
+mkdir -p /usr/local/share/man/man8
+mkdir -p /usr/local/share/doc/c-lightning
+install cli/lightning-cli lightningd/lightningd /usr/local/bin
+[...]
+----
+
+Let's check and see if the +lightningd+ and +lightning-cli+ commands have been installed correctly, asking each for their version information:
+
+----
+$ lightningd --version
+v0.8.1rc2
+$ lightning-cli --version
+v0.8.1rc2
+----
+
+You may see a different version from that shown above, as the software continues to evolve long after this book is printed. However, no matter what version you see, the fact that the commands execute and show you version information means that you have succeeded in building the c-lightning software.
+
 === eclair
 === lightning network daemon (lnd)
-=== Comparing the implementations
